@@ -90,6 +90,16 @@ class SpotifyBackend(pykka.ThreadingActor, backend.Backend):
             self._logged_out,
             backend_actor_proxy,
         )
+        def logged_in(session, error_type):
+            if error_type is spotify.ErrorType.OK:
+                logger.error('Logged in as %s' % session.user)
+            else:
+                logger.error('Login failed: %s' % error_type)
+                session.login(
+                    self._config["spotify"]["username"],
+                    self._config["spotify"]["password"],
+                )
+        session.on(spotify.SessionEvent.LOGGED_IN, logged_in)
         session.on(
             spotify.SessionEvent.PLAY_TOKEN_LOST,
             on_play_token_lost,
